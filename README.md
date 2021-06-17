@@ -4,7 +4,6 @@
 # Install and run on cedar
 
 ```
-38
 module load python/3.8
 virtualenv ENV
 source ENV/bin/activate
