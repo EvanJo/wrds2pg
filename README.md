@@ -1,5 +1,5 @@
 
-## Small tweaks to make the code compatible with Compute Canada's  PostgreSQL virtual machine on Cedar
+## Small tweaks added to make the code compatible with Compute Canada's  PostgreSQL virtual machine on Cedar
 
 # Install and run on cedar
 
