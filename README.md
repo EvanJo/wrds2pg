@@ -1,3 +1,23 @@
+
+## Small tweaks to make the code compatible with Compute Canada's  PostgreSQL virtual machine on Cedar
+
+# Install and run on cedar
+
+```
+38
+module load python/3.8
+virtualenv ENV
+source ENV/bin/activate
+pip install --no-index --upgrade pip
+pip install git+https://github.com/evanjo/wrds2pg --upgrade
+python -c '
+from wrds2pg import wrds_update
+wrds_update(table_name="mcti", schema="crsp", host="cedar-pgsql-vm", 
+	dbname=your_pg_database, 
+	fix_missing=True, fix_cr=True, drop="b30ret b30ind", obs=10, 
+	rename="caldt=calendar_date", force=True)'
+```
+
 # WRDS (or SAS) to PostgreSQL
 This software has two functions:
 - Download tables from [WRDS](https://wrds-web.wharton.upenn.edu/wrds/) and feed them to a PostgreSQL database. (Requires access to WRDS and to the data in question.)
