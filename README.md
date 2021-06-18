@@ -1,7 +1,7 @@
 
 ## Small tweaks added to make the code compatible with Compute Canada's  PostgreSQL virtual machine on Cedar
 
-# Install and run on cedar
+## Install and run on cedar
 
 ```
 module load python/3.8
@@ -11,10 +11,19 @@ pip install --no-index --upgrade pip
 pip install git+https://github.com/evanjo/wrds2pg --upgrade
 python -c '
 from wrds2pg import wrds_update
-wrds_update(table_name="mcti", schema="crsp", host="cedar-pgsql-vm", 
-	dbname=your_pg_database, 
-	fix_missing=True, fix_cr=True, drop="b30ret b30ind", obs=10, 
-	rename="caldt=calendar_date", force=True)'
+
+wrds_update(schema="crsp"
+	,table_name="msf" 
+	, host="cedar-pgsql-vm"
+	,dbname="<your_db>"
+	, obs=100
+	,fix_missing=True
+	, fix_cr=True
+	, force=True
+	, create_roles=False
+	)
+	
+'
 ```
 
 # WRDS (or SAS) to PostgreSQL
