@@ -23,7 +23,7 @@ def get_process(sas_code, wrds_id=None, fpath=None):
         """Function runs SAS code on WRDS server and
         returns result as pipe on stdout."""
         client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.set_missing_host_key_policy(paramiko.WarningPolicy())
         client.connect('wrds-cloud.wharton.upenn.edu',
                        username=wrds_id, compress=False)
         command = "qsas -stdio -noterminal"
@@ -360,7 +360,7 @@ def set_table_comment(table_name, schema, comment, engine):
 
 def wrds_to_pg(table_name, schema, engine, wrds_id=None,
                fpath=None, fix_missing=False, fix_cr=False, drop="", obs="", rename="", keep="",
-               alt_table_name = None, encoding=None, col_types=None):
+               alt_table_name = None, encoding=None, col_types=None, create_roles=True):
 
     if not alt_table_name:
         alt_table_name = table_name
@@ -375,12 +375,14 @@ def wrds_to_pg(table_name, schema, engine, wrds_id=None,
     insp = reflection.Inspector.from_engine(engine)
     if not schema in insp.get_schema_names():
         res = engine.execute("CREATE SCHEMA " + schema)
-     #   if not role_exists(engine, schema):
-     #       create_role(engine, schema)
-     #   res = engine.execute("ALTER SCHEMA " + schema + " OWNER TO " + schema)
-     #   if not role_exists(engine, "%s_access" % schema):
-     #       create_role(engine, "%s_access" % schema)
-     #   res = engine.execute("GRANT USAGE ON SCHEMA " + schema + " TO " + schema + "_access")
+        
+        if create_roles:
+            if not role_exists(engine, schema):
+                create_role(engine, schema)
+            res = engine.execute("ALTER SCHEMA " + schema + " OWNER TO " + schema)
+            if not role_exists(engine, "%s_access" % schema):
+                create_role(engine, "%s_access" % schema)
+            res = engine.execute("GRANT USAGE ON SCHEMA " + schema + " TO " + schema + "_access")
     res = engine.execute(make_table_data["sql"])
 
     now = strftime("%H:%M:%S", gmtime())
@@ -430,7 +432,7 @@ def wrds_process_to_pg(table_name, schema, engine, p, encoding=None):
 
 def wrds_update(table_name, schema, host=os.getenv("PGHOST"), dbname=os.getenv("PGDATABASE"), engine=None, 
         wrds_id=os.getenv("WRDS_ID"), fpath=None, force=False, fix_missing=False, fix_cr=False, drop="", keep="", 
-        obs="", rename="", alt_table_name=None, encoding=None, col_types=None):
+        obs="", rename="", alt_table_name=None, encoding=None, col_types=None, create_roles=False):
           
     if not alt_table_name:
         alt_table_name = table_name
@@ -468,22 +470,23 @@ def wrds_update(table_name, schema, host=os.getenv("PGHOST"), dbname=os.getenv("
         wrds_to_pg(table_name=table_name, schema=schema, engine=engine, wrds_id=wrds_id,
                 fpath=fpath, fix_missing=fix_missing, fix_cr=fix_cr,
                 drop=drop, keep=keep, obs=obs, rename=rename, alt_table_name=alt_table_name,
-                encoding=encoding, col_types=col_types)
+                encoding=encoding, col_types=col_types, create_roles=create_roles)
         set_table_comment(alt_table_name, schema, modified, engine)
         
-      #  if not role_exists(engine, schema):
-       #     create_role(engine, schema)
-        
-        #sql = r"""
-         #   ALTER TABLE "%s"."%s" OWNER TO %s""" % (schema, alt_table_name, schema)
-       # engine.execute(sql)
+        if create_roles:
+            if not role_exists(engine, schema):
+                create_role(engine, schema)
+            
+            sql = r"""
+                ALTER TABLE "%s"."%s" OWNER TO %s""" % (schema, alt_table_name, schema)
+            engine.execute(sql)
 
-       # if not role_exists(engine, "%s_access" % schema):
-       #     create_role(engine, "%s_access" % schema)
-       #     
-       # sql = r"""
-       #     GRANT SELECT ON "%s"."%s"  TO %s_access""" % (schema, alt_table_name, schema)
-       # engine.execute(sql)
+            if not role_exists(engine, "%s_access" % schema):
+                create_role(engine, "%s_access" % schema)
+                
+            sql = r"""
+                GRANT SELECT ON "%s"."%s"  TO %s_access""" % (schema, alt_table_name, schema)
+            engine.execute(sql)
 
         return True
 
