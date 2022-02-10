@@ -4,11 +4,21 @@
 ## Install and run on cedar
 
 ```
+###Install
+
 module load python/3.8
 virtualenv ENV
 source ENV/bin/activate
 pip install --no-index --upgrade pip
 pip install git+https://github.com/evanjo/wrds2pg --upgrade
+#alterhatively use:
+#pip install git+https://github.com/iangow/wrds2pg --upgrade
+
+
+###Run
+module load python/3.8
+source ENV/bin/activate
+
 python -c '
 from wrds2pg import wrds_update
 
