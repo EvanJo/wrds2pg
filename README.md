@@ -7,6 +7,7 @@
 ###Install
 
 module load python/3.8
+module load postgresql
 virtualenv ENV
 source ENV/bin/activate
 pip install --no-index --upgrade pip
@@ -17,6 +18,7 @@ pip install git+https://github.com/evanjo/wrds2pg --upgrade
 
 ###Run
 module load python/3.8
+module load postgresql
 source ENV/bin/activate
 
 python -c '
